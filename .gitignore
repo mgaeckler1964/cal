@@ -35,6 +35,7 @@ bin/
 # Borland Delphi files
 *.dsk
 *.drc
+*.dsm
 
 # Backups
 *.bak
