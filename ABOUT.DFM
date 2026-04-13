@@ -14,6 +14,7 @@ object AboutDlg: TAboutDlg
   Font.Style = []
   OldCreateOrder = True
   Position = poScreenCenter
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 16
   object Panel1: TPanel

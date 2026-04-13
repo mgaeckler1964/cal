@@ -12,7 +12,7 @@
 		it under the terms of the GNU General Public License as published by  
 		the Free Software Foundation, version 3.
 
-		You should have received a copy of the GNU General Public License 
+		You should have received a copy of the GNU General Public License
 		along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 		THIS SOFTWARE IS PROVIDED BY Martin Gäckler, Linz, Austria ``AS IS''
@@ -33,7 +33,7 @@ unit About;
 interface
 
 uses WinTypes, WinProcs, Classes, Graphics, Forms, Controls, StdCtrls,
-  Buttons, ExtCtrls;
+  Buttons, ExtCtrls, SysUtils;
 
 type
   TAboutDlg = class(TForm)
@@ -43,6 +43,7 @@ type
     ProductName: TLabel;
     Version: TLabel;
     Copyright: TLabel;
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
   public
@@ -55,6 +56,60 @@ var
 implementation
 
 {$R *.DFM}
+
+procedure TAboutDlg.FormCreate(Sender: TObject);
+var
+	infoSize, hnd	: DWORD;
+	versionBuf		: Pointer;
+	langPtr			: Pointer;
+	langPath		: string;
+	legalPtr		: Pointer;
+	fileInfo		: PVSFixedFileInfo;
+	versionSize		: UINT;
+	versionString	: string;
+	legalPChar		: PChar;
+	legalString		: string;
+begin
+	versionString := '';
+	legalString := '';
+	InfoSize := GetFileVersionInfoSize(PChar(Application.Exename), hnd);
+	if InfoSize > 0 then
+	begin
+		GetMem(versionBuf, InfoSize);
+		try
+			if GetFileVersionInfo( PChar(Application.Exename), hnd, infoSize, versionBuf ) then
+			begin
+				if VerQueryValue(versionBuf, '\', Pointer(fileInfo), versionSize) then
+				begin
+				VersionString := Format('%d.%d.%d.%d', [
+					HiWord(fileInfo.dwFileVersionMS), // Major
+					LoWord(fileInfo.dwFileVersionMS), // Minor
+					HiWord(fileInfo.dwFileVersionLS), // Release
+					LoWord(fileInfo.dwFileVersionLS)  // Build
+				]);
+				end;
+
+				if VerQueryValue(versionBuf, '\VarFileInfo\Translation', langPtr, versionSize) then
+				begin
+					langPath := Format('\StringFileInfo\%.4x%.4x\LegalCopyright', [
+						Loword(PLongInt(langPtr)^),
+						Hiword(PLongInt(langPtr)^)
+					]);
+					if VerQueryValue(versionBuf, PChar(langPath), Pointer(legalPChar), versionSize) then
+					begin
+					  legalString := legalPChar;
+					end;
+				end;
+			end;
+		finally
+			FreeMem(versionBuf);
+		end;
+	end;
+	if Length(versionString) > 0 then
+		Version.Caption := versionString;
+	if Length(legalString) > 0 then
+		Copyright.Caption := legalString;
+end;
 
 end.
  
